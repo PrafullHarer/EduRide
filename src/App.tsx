@@ -6,15 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
-// Loading component for Suspense fallback
-const PageLoader = () => (
-  <div className="flex min-h-screen items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-4">
-      <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      <p className="text-muted-foreground animate-pulse">Loading...</p>
-    </div>
-  </div>
-);
+// Empty fallback - no loading screen, pages appear instantly
+const PageLoader = () => null;
 
 // Lazy load all pages for faster initial load
 // Common
