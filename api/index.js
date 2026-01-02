@@ -1,17 +1,21 @@
 // Vercel serverless function wrapper for Express app
-require('dotenv').config();
+import 'dotenv/config';
+import { createRequire } from 'module';
+
+// Create require function for CommonJS modules in server/
+const require = createRequire(import.meta.url);
 
 // Set default JWT_SECRET if not provided
 if (!process.env.JWT_SECRET) {
-    process.env.JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    process.env.JWT_SECRET = 'your-secret-key-change-in-production';
     console.warn('Warning: JWT_SECRET not set, using default. Set JWT_SECRET in Vercel environment variables.');
 }
 
-const express = require('express');
-const cors = require('cors');
-const connectDB = require('../server/config/db');
+import express from 'express';
+import cors from 'cors';
 
-// Import routes
+// Import CommonJS modules from server directory using require
+const connectDB = require('../server/config/db');
 const authRoutes = require('../server/routes/auth');
 const studentRoutes = require('../server/routes/students');
 const busRoutes = require('../server/routes/buses');
@@ -72,7 +76,7 @@ const initDB = async () => {
 };
 
 // Vercel serverless function handler
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
     try {
         // Log incoming request for debugging
         console.log(`[API] ${req.method} ${req.url}`);
@@ -98,5 +102,4 @@ module.exports = async (req, res) => {
             });
         }
     }
-};
-
+}
