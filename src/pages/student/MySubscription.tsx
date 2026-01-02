@@ -97,7 +97,11 @@ const MySubscription: React.FC = () => {
 
     // Show skeleton loader immediately for better perceived performance
     if (loading) {
-        return <SubscriptionSkeleton />;
+        return (
+            <DashboardLayout title="My Subscription" subtitle="Loading subscription details...">
+                <SubscriptionSkeleton />
+            </DashboardLayout>
+        );
     }
 
     const currentSub = subscriptions[0];

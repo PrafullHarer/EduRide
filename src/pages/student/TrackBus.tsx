@@ -123,9 +123,14 @@ const TrackBus: React.FC = () => {
 
     // Show skeleton loader immediately for better perceived performance
     if (loading) {
-        return <TrackBusSkeleton />;
+        return (
+            <DashboardLayout title="Track My Bus" subtitle="Loading bus location...">
+                <TrackBusSkeleton />
+            </DashboardLayout>
+        );
     }
 
+    // No bus assigned state
     if (!bus) {
         return (
             <DashboardLayout title="Track My Bus" subtitle="See where your bus is">
