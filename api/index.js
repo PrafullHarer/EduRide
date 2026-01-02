@@ -1,6 +1,4 @@
 // Vercel serverless function wrapper for Express app
-// Simplified pattern - connect DB at module load, export app directly
-
 import 'dotenv/config';
 import { createRequire } from 'module';
 
@@ -12,14 +10,11 @@ if (!process.env.JWT_SECRET) {
     console.warn('Warning: JWT_SECRET not set, using default.');
 }
 
-// Import and connect DB at module load (not per-request)
-const connectDB = require('../server/config/db');
-connectDB(); // Connect immediately when module loads
-
 import express from 'express';
 import cors from 'cors';
 
-// Import routes
+// Import DB and routes
+const connectDB = require('../server/config/db');
 const authRoutes = require('../server/routes/auth');
 const studentRoutes = require('../server/routes/students');
 const busRoutes = require('../server/routes/buses');
@@ -65,5 +60,17 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Export app directly for Vercel serverless function (simpler, faster pattern)
-export default app;
+// Cache DB connection promise
+let dbPromise = null;
+
+// Vercel serverless handler - must be async to properly handle DB connection
+export default async function handler(req, res) {
+    // Connect to DB once (cached)
+    if (!dbPromise) {
+        dbPromise = connectDB();
+    }
+    await dbPromise;
+
+    // Handle request with Express
+    return app(req, res);
+}
