@@ -1,21 +1,25 @@
 // Vercel serverless function wrapper for Express app
+// Simplified pattern - connect DB at module load, export app directly
+
 import 'dotenv/config';
 import { createRequire } from 'module';
 
-// Create require function for CommonJS modules in server/
 const require = createRequire(import.meta.url);
 
 // Set default JWT_SECRET if not provided
 if (!process.env.JWT_SECRET) {
     process.env.JWT_SECRET = 'your-secret-key-change-in-production';
-    console.warn('Warning: JWT_SECRET not set, using default. Set JWT_SECRET in Vercel environment variables.');
+    console.warn('Warning: JWT_SECRET not set, using default.');
 }
+
+// Import and connect DB at module load (not per-request)
+const connectDB = require('../server/config/db');
+connectDB(); // Connect immediately when module loads
 
 import express from 'express';
 import cors from 'cors';
 
-// Import CommonJS modules from server directory using require
-const connectDB = require('../server/config/db');
+// Import routes
 const authRoutes = require('../server/routes/auth');
 const studentRoutes = require('../server/routes/students');
 const busRoutes = require('../server/routes/buses');
@@ -36,7 +40,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Routes - Vercel rewrite preserves the /api prefix
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/buses', busRoutes);
@@ -50,56 +54,16 @@ app.use('/api/tracking', trackingRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', message: 'School Bus Buddy API is running' });
+    res.json({ status: 'ok', message: 'EduRide API is running' });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Express error:', err);
     res.status(err.status || 500).json({
-        message: err.message || 'Internal server error',
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+        message: err.message || 'Internal server error'
     });
 });
 
-// Initialize DB connection once
-let dbInitPromise = null;
-const initDB = async () => {
-    if (!dbInitPromise) {
-        dbInitPromise = connectDB().catch(err => {
-            console.error('DB connection error:', err);
-            dbInitPromise = null; // Reset on error to allow retry
-            throw err;
-        });
-    }
-    return dbInitPromise;
-};
-
-// Vercel serverless function handler
-export default async function handler(req, res) {
-    try {
-        // Log incoming request for debugging
-        console.log(`[API] ${req.method} ${req.url}`);
-
-        // Check environment variables
-        if (!process.env.MONGODB_URI) {
-            console.error('MONGODB_URI is not set!');
-            return res.status(500).json({ message: 'Server configuration error: MONGODB_URI missing' });
-        }
-
-        // Connect to DB (connection is cached for serverless)
-        await initDB();
-
-        // Handle the request with Express
-        app(req, res);
-    } catch (error) {
-        console.error('Server error:', error.message, error.stack);
-        if (!res.headersSent) {
-            res.status(500).json({
-                message: 'Internal server error',
-                error: error.message,
-                hint: 'Check Vercel logs for details'
-            });
-        }
-    }
-}
+// Export app directly for Vercel serverless function (simpler, faster pattern)
+export default app;
