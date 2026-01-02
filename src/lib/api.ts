@@ -131,3 +131,34 @@ export const PRICE_PER_KM = 150;
 export const calculateMonthlyFee = (distanceKm: number) => {
     return Math.round(distanceKm * PRICE_PER_KM);
 };
+
+// Preload all API endpoints to warm up serverless functions
+// Call this after successful login to eliminate cold starts on navigation
+export const preloadAPIs = async (role: string) => {
+    const endpoints: string[] = [];
+
+    // Common endpoints
+    endpoints.push('/auth/me');
+
+    // Role-specific endpoints
+    if (role === 'admin') {
+        endpoints.push('/students', '/buses', '/routes', '/drivers', '/subscriptions', '/payments', '/analytics', '/schedules');
+    } else if (role === 'student') {
+        endpoints.push('/students', '/routes', '/buses');
+    } else if (role === 'driver') {
+        endpoints.push('/drivers', '/schedules', '/routes', '/buses');
+    }
+
+    // Fire all requests in parallel (don't await - let them warm up in background)
+    const token = getToken();
+    endpoints.forEach(endpoint => {
+        fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {})
+            }
+        }).catch(() => { }); // Silently ignore errors - just warming up
+    });
+
+    console.log(`[Preload] Warming up ${endpoints.length} API endpoints for ${role}`);
+};

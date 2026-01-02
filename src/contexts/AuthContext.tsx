@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { authAPI } from '@/lib/api';
+import { authAPI, preloadAPIs } from '@/lib/api';
 
 export interface User {
   id: string;
@@ -53,6 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const data = await authAPI.login(email, password, role);
       localStorage.setItem('token', data.token);
       setUser(data.user);
+
+      // Preload API endpoints in background to warm up serverless functions
+      preloadAPIs(role);
+
       return true;
     } catch (error) {
       console.error('Login error:', error);
