@@ -6,8 +6,29 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
-// Empty fallback - no loading screen, pages appear instantly
-const PageLoader = () => null;
+import { Loader2 } from "lucide-react";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
+
+// Loading fallback that persists the layout to prevent flashing/black screens
+const PageLoader = () => {
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return (
+      <DashboardLayout title="EduRide" subtitle="Loading...">
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+    </div>
+  );
+};
 
 // Lazy load all pages for faster initial load
 // Common
