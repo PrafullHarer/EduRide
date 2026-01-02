@@ -1,5 +1,6 @@
 // Use environment variable or default to relative path for Vercel
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+// Use environment variable or default to relative path for Vercel
+const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:5000/api' : (import.meta.env.VITE_API_URL || '/api');
 
 // Helper to get auth token
 const getToken = () => localStorage.getItem('token');
