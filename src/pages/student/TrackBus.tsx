@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bus, MapPin, Clock, Loader2 } from 'lucide-react';
+import { Bus, MapPin, Clock } from 'lucide-react';
 import BusMap from '@/components/maps/BusMap';
 import { socketService } from '@/lib/socket';
 import { useAuth } from '@/contexts/AuthContext';
 import { studentsAPI, busesAPI, routesAPI } from '@/lib/api';
+import { TrackBusSkeleton } from '@/components/skeleton/TrackBusSkeleton';
 
 interface BusInfo {
     busId: string;
@@ -120,14 +121,9 @@ const TrackBus: React.FC = () => {
         };
     }, [user]);
 
+    // Show skeleton loader immediately for better perceived performance
     if (loading) {
-        return (
-            <DashboardLayout title="Track My Bus" subtitle="See where your bus is">
-                <div className="flex items-center justify-center h-96">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            </DashboardLayout>
-        );
+        return <TrackBusSkeleton />;
     }
 
     if (!bus) {

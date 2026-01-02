@@ -68,6 +68,8 @@ router.get('/bus/:busId', auth, async (req, res) => {
         if (!bus) {
             return res.status(404).json({ message: 'Bus not found' });
         }
+        // Short cache for real-time data (10 seconds with 5s stale grace)
+        res.set('Cache-Control', 's-maxage=10, stale-while-revalidate=5');
         res.json(bus);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

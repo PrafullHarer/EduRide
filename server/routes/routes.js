@@ -8,6 +8,8 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
     try {
         const routes = await Route.find().populate('busId');
+        // Cache for 5 minutes, serve stale for 60 seconds while revalidating
+        res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
         res.json(routes);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -21,6 +23,8 @@ router.get('/:id', auth, async (req, res) => {
         if (!route) {
             return res.status(404).json({ message: 'Route not found' });
         }
+        // Cache for 5 minutes, serve stale for 60 seconds while revalidating
+        res.set('Cache-Control', 's-maxage=300, stale-while-revalidate=60');
         res.json(route);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

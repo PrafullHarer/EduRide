@@ -18,6 +18,8 @@ router.get('/', auth, async (req, res) => {
 router.get('/student/:studentId', auth, async (req, res) => {
     try {
         const subscriptions = await Subscription.find({ studentId: req.params.studentId }).sort({ year: -1, month: -1 });
+        // Cache for 2 minutes - subscription data changes infrequently
+        res.set('Cache-Control', 's-maxage=120, stale-while-revalidate=30');
         res.json(subscriptions);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });

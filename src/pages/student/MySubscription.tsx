@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
-import { CreditCard, Calendar, IndianRupee, Loader2, CheckCircle } from 'lucide-react';
+import { CreditCard, Calendar, IndianRupee, CheckCircle, Loader2 } from 'lucide-react';
+import { SubscriptionSkeleton } from '@/components/skeleton/SubscriptionSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { studentsAPI, subscriptionsAPI, paymentsAPI, calculateMonthlyFee } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -94,14 +95,9 @@ const MySubscription: React.FC = () => {
         }
     };
 
+    // Show skeleton loader immediately for better perceived performance
     if (loading) {
-        return (
-            <DashboardLayout title="My Subscription" subtitle="View your subscription details">
-                <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            </DashboardLayout>
-        );
+        return <SubscriptionSkeleton />;
     }
 
     const currentSub = subscriptions[0];

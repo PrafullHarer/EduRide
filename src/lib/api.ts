@@ -132,6 +132,12 @@ export const calculateMonthlyFee = (distanceKm: number) => {
     return Math.round(distanceKm * PRICE_PER_KM);
 };
 
+// Dashboard API - Combined endpoints for faster initial page loads
+// These reduce multiple API calls to a single request
+export const dashboardAPI = {
+    getStudentDashboard: () => authFetch('/dashboard/student'),
+};
+
 // Preload all API endpoints to warm up serverless functions
 // Call this after successful login to eliminate cold starts on navigation
 export const preloadAPIs = async (role: string) => {
