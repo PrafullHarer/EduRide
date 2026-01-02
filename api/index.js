@@ -74,17 +74,27 @@ const initDB = async () => {
 // Vercel serverless function handler
 module.exports = async (req, res) => {
     try {
+        // Log incoming request for debugging
+        console.log(`[API] ${req.method} ${req.url}`);
+
+        // Check environment variables
+        if (!process.env.MONGODB_URI) {
+            console.error('MONGODB_URI is not set!');
+            return res.status(500).json({ message: 'Server configuration error: MONGODB_URI missing' });
+        }
+
         // Connect to DB (connection is cached for serverless)
         await initDB();
-        
+
         // Handle the request with Express
         app(req, res);
     } catch (error) {
-        console.error('Server error:', error);
+        console.error('Server error:', error.message, error.stack);
         if (!res.headersSent) {
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Internal server error',
-                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+                error: error.message,
+                hint: 'Check Vercel logs for details'
             });
         }
     }
