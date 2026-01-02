@@ -51,6 +51,13 @@ export const authAPI = {
         return data;
     },
 
+    changePassword: async (data: { currentPassword: string; newPassword: string }) => {
+        return authFetch('/auth/change-password', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    },
+
     me: () => authFetch('/auth/me'),
 };
 
@@ -59,6 +66,7 @@ export const studentsAPI = {
     getAll: () => authFetch('/students'),
     getById: (id: string) => authFetch(`/students/${id}`),
     getByUserId: (userId: string) => authFetch(`/students/user/${userId}`),
+    getByRouteId: (routeId: string) => authFetch(`/students/route/${routeId}`),
     create: (data: any) => authFetch('/students', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => authFetch(`/students/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => authFetch(`/students/${id}`, { method: 'DELETE' }),
@@ -101,6 +109,8 @@ export const subscriptionsAPI = {
     create: (data: any) => authFetch('/subscriptions', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: any) => authFetch(`/subscriptions/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => authFetch(`/subscriptions/${id}`, { method: 'DELETE' }),
+    generate: (data: { studentId: string; month: string; year: number }) => authFetch('/subscriptions/generate', { method: 'POST', body: JSON.stringify(data) }),
+    generateAll: (data: { month: string; year: number }) => authFetch('/subscriptions/generate-all', { method: 'POST', body: JSON.stringify(data) }),
 };
 
 // Payments API
@@ -147,6 +157,26 @@ export const messagesAPI = {
     getAll: () => authFetch('/messages'),
     markRead: (id: string) => authFetch(`/messages/${id}/read`, { method: 'PATCH' }),
     delete: (id: string) => authFetch(`/messages/${id}`, { method: 'DELETE' }),
+};
+
+// Attendance API
+export const attendanceAPI = {
+    saveBulk: (date: string, records: Array<{ studentId: string; morning: boolean; evening: boolean }>, isHoliday?: boolean) =>
+        authFetch('/attendance/bulk', { method: 'POST', body: JSON.stringify({ date, records, isHoliday }) }),
+    getByStudentMonth: (studentId: string, year: number, month: number) =>
+        authFetch(`/attendance/student/${studentId}/month/${year}/${month}`),
+    getByDate: (date: string, studentIds: string[]) =>
+        authFetch('/attendance/date', { method: 'POST', body: JSON.stringify({ date, studentIds }) }),
+};
+
+// Trip Logs API
+export const tripLogsAPI = {
+    create: (data: { driverId: string; busId?: string; routeId?: string; date: string; shift: 'morning' | 'evening'; studentsCount?: number }) =>
+        authFetch('/trip-logs', { method: 'POST', body: JSON.stringify(data) }),
+    getByDriver: (driverId: string, limit?: number) =>
+        authFetch(`/trip-logs/driver/${driverId}?limit=${limit || 30}`),
+    getTodayStatus: (driverId: string) =>
+        authFetch(`/trip-logs/driver/${driverId}/today`),
 };
 
 // Preload all API endpoints to warm up serverless functions

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, Save, IndianRupee, Loader2, Check } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Save, IndianRupee, Loader2, Check, Calculator, Clock, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Separator } from '@/components/ui/separator';
 
 const STORAGE_KEY = 'schoolBusBuddy_pricePerKm';
 const DEFAULT_PRICE = 150;
@@ -30,7 +33,6 @@ const Pricing: React.FC = () => {
 
     const handleSave = async () => {
         setSaving(true);
-
         // Simulate a small delay for better UX
         await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -49,99 +51,169 @@ const Pricing: React.FC = () => {
     };
 
     return (
-        <DashboardLayout title="Pricing" subtitle="Configure subscription pricing">
-            <div className="max-w-2xl space-y-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <FileText className="h-5 w-5" />
-                            Subscription Pricing
-                        </CardTitle>
-                        <CardDescription>
-                            Set the price per kilometer for student subscriptions. This will be used to calculate monthly fees.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
+        <DashboardLayout title="Pricing Configuration" subtitle="Manage subscription rates and fees">
+            <div className="container max-w-5xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-700">
+
+                {/* Header Banner */}
+                <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-background border-primary/20 shadow-md">
+                    <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="pricePerKm">Price per Kilometer (₹)</Label>
-                            <div className="relative">
-                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    id="pricePerKm"
-                                    type="number"
-                                    min="1"
-                                    value={pricePerKm}
-                                    onChange={(e) => setPricePerKm(Number(e.target.value) || 0)}
-                                    className="pl-10 text-lg"
-                                />
+                            <div className="flex items-center gap-2 text-primary font-semibold">
+                                <FileText className="h-5 w-5" />
+                                <span>Subscription Settings</span>
+                            </div>
+                            <h2 className="text-3xl font-bold tracking-tight">Standard Per-Km Rate</h2>
+                            <p className="text-muted-foreground max-w-md">
+                                Define the base rate charged per kilometer for student bus subscriptions.
+                                This value is used to automatically calculate monthly bills.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4 bg-background/50 p-4 rounded-xl border backdrop-blur-sm">
+                            <div className="text-right">
+                                <p className="text-sm font-medium text-muted-foreground">Current Rate</p>
+                                <p className="text-2xl font-bold text-primary">₹{pricePerKm}/km</p>
+                            </div>
+                            <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <Check className="h-6 w-6 text-green-600" />
                             </div>
                         </div>
-
-                        <div className="p-4 bg-muted rounded-lg space-y-2">
-                            <p className="text-sm font-medium">Example Calculation</p>
-                            <div className="grid grid-cols-3 gap-4 text-sm">
-                                <div>
-                                    <p className="text-muted-foreground">Distance</p>
-                                    <p className="font-semibold">10 km</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Rate</p>
-                                    <p className="font-semibold">₹{pricePerKm}/km</p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground">Monthly Fee</p>
-                                    <p className="font-semibold text-primary">₹{10 * pricePerKm}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <Button onClick={handleSave} className="w-full" disabled={saving || pricePerKm <= 0}>
-                            {saving ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Saving...
-                                </>
-                            ) : (
-                                <>
-                                    <Save className="h-4 w-4 mr-2" />
-                                    Save Pricing
-                                </>
-                            )}
-                        </Button>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Current Pricing</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                        <Check className="h-4 w-4 text-primary" />
+                <div className="grid lg:grid-cols-2 gap-8">
+
+                    {/* Left: Configuration Panel */}
+                    <Card className="shadow-lg border-muted/40 h-fit">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Calculator className="h-5 w-5 text-primary" />
+                                Adjust Pricing
+                            </CardTitle>
+                            <CardDescription>
+                                Drag the slider or enter a custom amount.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-8">
+
+                            {/* Input & Slider */}
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <Label htmlFor="pricePerKm" className="text-base">Rate per Kilometer</Label>
+                                        <span className="text-2xl font-bold text-primary">₹{pricePerKm}</span>
                                     </div>
-                                    <div>
-                                        <p className="font-medium">₹{pricePerKm}/km</p>
-                                        <p className="text-sm text-muted-foreground">Active rate</p>
+                                    <Slider
+                                        value={[pricePerKm]}
+                                        min={10}
+                                        max={500}
+                                        step={5}
+                                        onValueChange={(val) => setPricePerKm(val[0])}
+                                        className="py-4"
+                                    />
+                                </div>
+
+                                <div className="relative">
+                                    <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        id="pricePerKm"
+                                        type="number"
+                                        min="1"
+                                        value={pricePerKm}
+                                        onChange={(e) => setPricePerKm(Number(e.target.value) || 0)}
+                                        className="pl-10 text-lg h-12 bg-muted/20"
+                                    />
+                                    <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        Last updated: {lastSaved || 'Never'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            {/* Info Box */}
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-900/50 flex gap-3">
+                                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" />
+                                <div className="space-y-1">
+                                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-300">Important Note</h4>
+                                    <p className="text-sm text-yellow-700 dark:text-yellow-400/90 leading-relaxed">
+                                        Updating this rate will only affect specific future calculations.
+                                        Existing active subscriptions retain their locked-in price until renewed.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </CardContent>
+                        <CardFooter>
+                            <Button onClick={handleSave} className="w-full text-lg h-12" disabled={saving || pricePerKm <= 0}>
+                                {saving ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                        Updating...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="h-5 w-5 mr-2" />
+                                        Save New Rate
+                                    </>
+                                )}
+                            </Button>
+                        </CardFooter>
+                    </Card>
+
+                    {/* Right: Live Preview */}
+                    <Card className="bg-muted/30 border-dashed shadow-inner">
+                        <CardHeader>
+                            <CardTitle>Bill Preview</CardTitle>
+                            <CardDescription>Estimated monthly bill for a student living 12km away</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex items-center justify-center p-8">
+
+                            {/* Mock Bill Card */}
+                            <div className="bg-background w-full max-w-sm rounded-2xl shadow-xl overflow-hidden border">
+                                <div className="bg-primary p-6 text-primary-foreground text-center">
+                                    <p className="text-sm uppercase tracking-wider opacity-80 mb-1">Total Amount Due</p>
+                                    <h3 className="text-4xl font-bold">₹{(12 * pricePerKm).toLocaleString()}</h3>
+                                </div>
+                                <div className="p-6 space-y-4">
+                                    <div className="flex justify-between items-center pb-4 border-b">
+                                        <div>
+                                            <p className="font-medium">Distance</p>
+                                            <p className="text-xs text-muted-foreground">Home to School</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-bold">12 km</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-between items-center pb-4 border-b">
+                                        <div>
+                                            <p className="font-medium">Rate Applied</p>
+                                            <p className="text-xs text-muted-foreground">Standard Tier</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="font-bold">₹{pricePerKm}/km</p>
+                                        </div>
+                                    </div>
+                                    <div className="pt-2">
+                                        <div className="flex justify-between items-center text-sm text-muted-foreground">
+                                            <span>Subtotal</span>
+                                            <span>₹{(12 * pricePerKm).toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm text-muted-foreground mt-1">
+                                            <span>Tax</span>
+                                            <span>₹0</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                    {lastSaved ? `Last updated: ${lastSaved}` : 'Not saved yet'}
-                                </p>
+                                <div className="bg-muted/50 p-4 text-center">
+                                    <Badge variant="outline" className="bg-white">Sample Bill</Badge>
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
 
-                <Card className="border-dashed">
-                    <CardContent className="p-4">
-                        <p className="text-sm text-muted-foreground text-center">
-                            💡 <strong>Tip:</strong> Changes to pricing will only affect new subscriptions. Existing subscriptions will keep their original rate until renewed.
-                        </p>
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+
+                </div>
             </div>
         </DashboardLayout>
     );

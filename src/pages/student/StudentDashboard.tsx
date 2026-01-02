@@ -96,7 +96,11 @@ const StudentDashboard: React.FC = () => {
                         <Badge variant={subscription.status === 'paid' ? 'default' : 'destructive'}>{subscription.status}</Badge>
                       </div>
                     </div>
-                    {subscription.status !== 'paid' && <Button variant="hero" className="w-full"><CreditCard className="h-4 w-4 mr-2" />Pay Now</Button>}
+                    {subscription.status !== 'paid' && (
+                      <div className="p-2 bg-yellow-50 text-yellow-800 text-center rounded-md border border-yellow-200">
+                        Please pay at the school office.
+                      </div>
+                    )}
                     {subscription.status === 'paid' && <Button variant="outline" className="w-full"><FileText className="h-4 w-4 mr-2" />Download Receipt</Button>}
                   </>
                 ) : (

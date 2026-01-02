@@ -18,6 +18,8 @@ const scheduleRoutes = require('./routes/schedules');
 const trackingRoutes = require('./routes/tracking');
 const dashboardRoutes = require('./routes/dashboard');
 const messageRoutes = require('./routes/messages');
+const attendanceRoutes = require('./routes/attendance');
+const tripLogRoutes = require('./routes/tripLogs');
 
 const app = express();
 const server = http.createServer(app);
@@ -74,6 +76,8 @@ app.use('/api/schedules', scheduleRoutes);
 app.use('/api/tracking', trackingRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/trip-logs', tripLogRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

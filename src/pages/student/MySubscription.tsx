@@ -3,14 +3,10 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Input } from '@/components/ui/input';
-import { CreditCard, Calendar, IndianRupee, CheckCircle, Loader2 } from 'lucide-react';
+import { CreditCard, Calendar, IndianRupee, CheckCircle } from 'lucide-react';
 import { SubscriptionSkeleton } from '@/components/skeleton/SubscriptionSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
-import { studentsAPI, subscriptionsAPI, paymentsAPI, calculateMonthlyFee } from '@/lib/api';
+import { studentsAPI, subscriptionsAPI, calculateMonthlyFee } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface Subscription {
@@ -31,9 +27,6 @@ const MySubscription: React.FC = () => {
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
     const [student, setStudent] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showPaymentModal, setShowPaymentModal] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('card');
-    const [processing, setProcessing] = useState(false);
 
     const fetchData = async () => {
         if (!user) return;
@@ -55,46 +48,6 @@ const MySubscription: React.FC = () => {
         fetchData();
     }, [user]);
 
-    const handlePayment = async () => {
-        if (!student) return;
-
-        setProcessing(true);
-        try {
-            // Simulate payment processing
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            const currentSub = subscriptions[0];
-            const amount = currentSub?.totalAmount || calculateMonthlyFee(student.distanceKm);
-
-            await paymentsAPI.create({
-                studentId: student._id,
-                studentName: student.name,
-                subscriptionId: currentSub?._id,
-                amount,
-                method: paymentMethod,
-                transactionId: 'TXN' + Math.floor(Math.random() * 1000000),
-                status: 'success',
-                date: new Date().toISOString()
-            });
-
-            toast({
-                title: 'Payment Successful',
-                description: `Paid ₹${amount} via ${paymentMethod.toUpperCase()}`,
-            });
-
-            setShowPaymentModal(false);
-            fetchData(); // Refresh to update status
-        } catch (error: any) {
-            toast({
-                title: 'Payment Failed',
-                description: error.message || 'Could not process payment',
-                variant: 'destructive',
-            });
-        } finally {
-            setProcessing(false);
-        }
-    };
-
     // Show skeleton loader immediately for better perceived performance
     if (loading) {
         return (
@@ -108,6 +61,18 @@ const MySubscription: React.FC = () => {
     const monthlyFee = student ? calculateMonthlyFee(student.distanceKm) : 0;
     const payAmount = currentSub?.totalAmount || monthlyFee;
     const isPaid = currentSub?.status === 'paid';
+
+    const handlePayNow = () => {
+        if (!payAmount) return;
+        // Direct UPI Deep Link Redirect
+        const upiLink = `upi://pay?pa=demo@slice&pn=EduRide&am=${payAmount}&cu=INR`;
+        window.location.href = upiLink;
+
+        toast({
+            title: "Opening Payment App",
+            description: "Redirecting to your UPI app...",
+        });
+    };
 
     return (
         <DashboardLayout title="My Subscription" subtitle="View your subscription details">
@@ -145,11 +110,18 @@ const MySubscription: React.FC = () => {
                             </div>
                         </div>
 
-                        {!isPaid && (
-                            <Button className="w-full" size="lg" onClick={() => setShowPaymentModal(true)}>
+                        {currentSub && !isPaid && (
+                            <Button className="w-full" size="lg" onClick={handlePayNow}>
                                 <IndianRupee className="h-5 w-5 mr-2" />
                                 Pay ₹{payAmount}
                             </Button>
+                        )}
+
+                        {isPaid && (
+                            <div className="text-center p-4 bg-green-50 text-green-700 rounded-lg border border-green-200">
+                                <CheckCircle className="h-5 w-5 mx-auto mb-2" />
+                                <p className="font-medium">All payments are done</p>
+                            </div>
                         )}
                     </CardContent>
                 </Card>
@@ -185,75 +157,6 @@ const MySubscription: React.FC = () => {
                     </CardContent>
                 </Card>
             </div>
-
-            {/* Payment Modal */}
-            <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Make Payment</DialogTitle>
-                        <DialogDescription>
-                            Complete your payment for the monthly subscription.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
-                            <span className="font-medium">Total Amount</span>
-                            <span className="text-2xl font-bold text-primary">₹{payAmount}</span>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Select Payment Method</Label>
-                            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <RadioGroupItem value="card" id="card" className="peer sr-only" />
-                                    <Label
-                                        htmlFor="card"
-                                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                                    >
-                                        <CreditCard className="mb-2 h-6 w-6" />
-                                        Card
-                                    </Label>
-                                </div>
-                                <div>
-                                    <RadioGroupItem value="upi" id="upi" className="peer sr-only" />
-                                    <Label
-                                        htmlFor="upi"
-                                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                                    >
-                                        <IndianRupee className="mb-2 h-6 w-6" />
-                                        UPI
-                                    </Label>
-                                </div>
-                            </RadioGroup>
-                        </div>
-
-                        {paymentMethod === 'card' && (
-                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                <Label>Card Details (Simulated)</Label>
-                                <Input placeholder="0000 0000 0000 0000" disabled />
-                                <div className="grid grid-cols-2 gap-2">
-                                    <Input placeholder="MM/YY" disabled />
-                                    <Input placeholder="CVC" disabled />
-                                </div>
-                            </div>
-                        )}
-
-                        {paymentMethod === 'upi' && (
-                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                <Label>UPI ID (Simulated)</Label>
-                                <Input placeholder="username@upi" disabled />
-                            </div>
-                        )}
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowPaymentModal(false)} disabled={processing}>Cancel</Button>
-                        <Button onClick={handlePayment} disabled={processing} className="w-full sm:w-auto">
-                            {processing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                            Pay ₹{payAmount}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
         </DashboardLayout>
     );
 };

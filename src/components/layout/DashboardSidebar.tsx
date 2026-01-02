@@ -35,7 +35,6 @@ const studentLinks: SidebarLink[] = [
   { label: 'Dashboard', href: '/student', icon: <LayoutDashboard className="h-5 w-5" /> },
   { label: 'Track My Bus', href: '/student/track', icon: <Radar className="h-5 w-5" /> },
   { label: 'My Subscription', href: '/student/subscription', icon: <CreditCard className="h-5 w-5" /> },
-  { label: 'Payments', href: '/student/payments', icon: <IndianRupee className="h-5 w-5" /> },
   { label: 'My Route', href: '/student/route', icon: <MapPin className="h-5 w-5" /> },
   { label: 'Profile', href: '/student/profile', icon: <User className="h-5 w-5" /> },
 ];
@@ -48,7 +47,6 @@ const adminLinks: SidebarLink[] = [
   { label: 'Routes', href: '/admin/routes', icon: <Route className="h-5 w-5" /> },
   { label: 'Drivers', href: '/admin/drivers', icon: <UserCog className="h-5 w-5" /> },
   { label: 'Subscriptions', href: '/admin/subscriptions', icon: <CreditCard className="h-5 w-5" /> },
-  { label: 'Payments', href: '/admin/payments', icon: <IndianRupee className="h-5 w-5" /> },
   { label: 'Messages', href: '/admin/messages', icon: <MessageSquare className="h-5 w-5" /> },
   { label: 'Pricing', href: '/admin/pricing', icon: <FileText className="h-5 w-5" /> },
 ];
@@ -56,7 +54,6 @@ const adminLinks: SidebarLink[] = [
 const driverLinks: SidebarLink[] = [
   { label: 'Dashboard', href: '/driver', icon: <LayoutDashboard className="h-5 w-5" /> },
   { label: 'Manage Route', href: '/driver/manage-route', icon: <Navigation className="h-5 w-5" /> },
-  { label: 'Duty Schedule', href: '/driver/schedule', icon: <Calendar className="h-5 w-5" /> },
   { label: 'My Route', href: '/driver/route', icon: <MapPin className="h-5 w-5" /> },
   { label: 'Students', href: '/driver/students', icon: <Users className="h-5 w-5" /> },
   { label: 'Trip Log', href: '/driver/trips', icon: <ClipboardList className="h-5 w-5" /> },

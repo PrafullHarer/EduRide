@@ -1,14 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CreditCard, Search, Loader2, Calendar } from 'lucide-react';
-import { subscriptionsAPI, studentsAPI } from '@/lib/api';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ChevronLeft, ChevronRight, FileText, MessageCircle, CheckCircle, Plus, Loader2, Calendar, Search } from 'lucide-react';
+import { subscriptionsAPI } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 interface Subscription {
     _id: string;
-    studentId: { _id: string; name: string } | string;
+    studentId: {
+        _id: string;
+        name: string;
+        email?: string;
+        phone?: string;
+        address?: string;
+    } | string;
     month: string;
     year: number;
     distanceKm: number;
@@ -20,136 +31,329 @@ interface Subscription {
 }
 
 const Subscriptions: React.FC = () => {
+    const { toast } = useToast();
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<'all' | 'pending' | 'paid' | 'overdue'>('all');
+
+    // Date Selection
+    const [selectedDate, setSelectedDate] = useState(new Date());
+
+    // Search
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // Generate Modal
+    const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
+    const [generating, setGenerating] = useState(false);
+
+    const fetchSubscriptions = async () => {
+        try {
+            const data = await subscriptionsAPI.getAll();
+            setSubscriptions(data);
+        } catch (error) {
+            console.error('Error fetching subscriptions:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchSubscriptions = async () => {
-            try {
-                const data = await subscriptionsAPI.getAll();
-                setSubscriptions(data);
-            } catch (error) {
-                console.error('Error fetching subscriptions:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchSubscriptions();
     }, []);
 
-    const filteredSubs = filter === 'all'
-        ? subscriptions
-        : subscriptions.filter(s => s.status === filter);
+    // Filter Logic
+    const currentMonth = selectedDate.toLocaleString('default', { month: 'long' });
+    const currentYear = selectedDate.getFullYear();
 
+    const filteredSubs = subscriptions.filter(s => {
+        // Date Match
+        if (s.month !== currentMonth || s.year !== currentYear) return false;
+
+        // Search Match
+        if (!searchTerm) return true;
+
+        const term = searchTerm.toLowerCase();
+        const student = typeof s.studentId === 'object' ? s.studentId : null;
+
+        if (!student) return false;
+
+        return (
+            student.name.toLowerCase().includes(term) ||
+            (student.email && student.email.toLowerCase().includes(term)) ||
+            (student.phone && student.phone.includes(term)) ||
+            (student.address && student.address.toLowerCase().includes(term))
+        );
+    });
+
+    // Stats
     const stats = {
-        total: subscriptions.reduce((sum, s) => sum + s.totalAmount, 0),
-        paid: subscriptions.filter(s => s.status === 'paid').reduce((sum, s) => sum + s.totalAmount, 0),
-        pending: subscriptions.filter(s => s.status === 'pending').reduce((sum, s) => sum + s.totalAmount, 0),
-        overdue: subscriptions.filter(s => s.status === 'overdue').reduce((sum, s) => sum + s.totalAmount, 0),
+        totalBills: filteredSubs.length,
+        totalAmount: filteredSubs.reduce((sum, s) => sum + s.totalAmount, 0),
+        paidCount: filteredSubs.filter(s => s.status === 'paid').length,
+        paidAmount: filteredSubs.filter(s => s.status === 'paid').reduce((sum, s) => sum + s.totalAmount, 0),
+        pendingCount: filteredSubs.filter(s => s.status !== 'paid').length,
+        pendingAmount: filteredSubs.filter(s => s.status !== 'paid').reduce((sum, s) => sum + s.totalAmount, 0),
     };
 
-    if (loading) {
-        return (
-            <DashboardLayout title="Subscriptions" subtitle="Manage monthly subscriptions">
-                <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-            </DashboardLayout>
-        );
-    }
+    // Handlers
+    const handlePrevMonth = () => {
+        const newDate = new Date(selectedDate);
+        newDate.setMonth(newDate.getMonth() - 1);
+        setSelectedDate(newDate);
+    };
+
+    const handleNextMonth = () => {
+        const newDate = new Date(selectedDate);
+        newDate.setMonth(newDate.getMonth() + 1);
+        setSelectedDate(newDate);
+    };
+
+    const handleMonthSelect = (month: string) => {
+        const newDate = new Date(selectedDate);
+        const monthIndex = new Date(`${month} 1, 2000`).getMonth();
+        newDate.setMonth(monthIndex);
+        setSelectedDate(newDate);
+    };
+
+    const handleYearSelect = (year: string) => {
+        const newDate = new Date(selectedDate);
+        newDate.setFullYear(parseInt(year));
+        setSelectedDate(newDate);
+    };
+
+    const handleGenerateAll = async () => {
+        setGenerating(true);
+        try {
+            const res = await subscriptionsAPI.generateAll({
+                month: currentMonth,
+                year: currentYear
+            });
+            toast({ title: 'Success', description: res.message });
+            setShowGenerateConfirm(false);
+            fetchSubscriptions();
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message || 'Failed to generate bills', variant: 'destructive' });
+        } finally {
+            setGenerating(false);
+        }
+    };
+
+    const handleMarkPaid = async (id: string) => {
+        if (!confirm('Mark this subscription as PAID?')) return;
+        try {
+            await subscriptionsAPI.update(id, { status: 'paid', paidDate: new Date() });
+            toast({ title: 'Success', description: 'Marked as paid' });
+            fetchSubscriptions();
+        } catch (error) {
+            toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' });
+        }
+    };
+
+    const handleWhatsApp = (sub: Subscription) => {
+        const student = typeof sub.studentId === 'object' ? sub.studentId : null;
+        if (!student?.phone) {
+            toast({ title: 'Error', description: 'Student phone number not found', variant: 'destructive' });
+            return;
+        }
+        const message = `Dear ${student.name}, your school bus bill for ${sub.month} ${sub.year} of ₹${sub.totalAmount} is ${sub.status}. Please pay as soon as possible.`;
+        window.open(`https://wa.me/91${student.phone}?text=${encodeURIComponent(message)}`, '_blank');
+    };
 
     return (
-        <DashboardLayout title="Subscriptions" subtitle="Manage monthly subscriptions">
+        <DashboardLayout title="Bills" subtitle="Generate and manage monthly bills">
             <div className="space-y-6">
-                {/* Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <Card className="cursor-pointer hover:border-primary" onClick={() => setFilter('all')}>
-                        <CardContent className="p-4">
-                            <p className="text-2xl font-bold">₹{stats.total.toLocaleString()}</p>
-                            <p className="text-sm text-muted-foreground">Total Amount</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="cursor-pointer hover:border-success" onClick={() => setFilter('paid')}>
-                        <CardContent className="p-4">
-                            <p className="text-2xl font-bold text-success">₹{stats.paid.toLocaleString()}</p>
-                            <p className="text-sm text-muted-foreground">Collected</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="cursor-pointer hover:border-warning" onClick={() => setFilter('pending')}>
-                        <CardContent className="p-4">
-                            <p className="text-2xl font-bold text-warning">₹{stats.pending.toLocaleString()}</p>
-                            <p className="text-sm text-muted-foreground">Pending</p>
-                        </CardContent>
-                    </Card>
-                    <Card className="cursor-pointer hover:border-destructive" onClick={() => setFilter('overdue')}>
-                        <CardContent className="p-4">
-                            <p className="text-2xl font-bold text-destructive">₹{stats.overdue.toLocaleString()}</p>
-                            <p className="text-sm text-muted-foreground">Overdue</p>
-                        </CardContent>
-                    </Card>
-                </div>
 
-                {/* Filter Pills */}
-                <div className="flex gap-2">
-                    {(['all', 'pending', 'paid', 'overdue'] as const).map((f) => (
-                        <Badge
-                            key={f}
-                            variant={filter === f ? 'default' : 'outline'}
-                            className="cursor-pointer px-4 py-2"
-                            onClick={() => setFilter(f)}
-                        >
-                            {f.charAt(0).toUpperCase() + f.slice(1)}
-                        </Badge>
-                    ))}
-                </div>
+                {/* Top Bar */}
+                <Card className="rounded-xl border-none shadow-sm bg-card">
+                    <CardContent className="p-4 flex flex-col xl:flex-row items-center justify-between gap-4">
 
-                {/* Subscription List */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Subscriptions ({filteredSubs.length})</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-3">
-                            {filteredSubs.map((sub) => (
-                                <div key={sub._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                                    <div className="flex items-center gap-4">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                            <CreditCard className="h-5 w-5 text-primary" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold">
-                                                {typeof sub.studentId === 'object' ? sub.studentId.name : 'Student'}
-                                            </p>
-                                            <p className="text-sm text-muted-foreground">
-                                                {sub.month} {sub.year} • {sub.distanceKm} km @ ₹{sub.pricePerKm}/km
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="text-right">
-                                            <p className="font-bold">₹{sub.totalAmount}</p>
-                                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                                <Calendar className="h-3 w-3" />
-                                                Due: {new Date(sub.dueDate).toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                        <Badge variant={
-                                            sub.status === 'paid' ? 'default' :
-                                                sub.status === 'pending' ? 'secondary' : 'destructive'
-                                        }>
-                                            {sub.status}
-                                        </Badge>
-                                    </div>
-                                </div>
-                            ))}
-                            {filteredSubs.length === 0 && (
-                                <p className="text-center text-muted-foreground py-8">No subscriptions found</p>
-                            )}
+                        {/* 1. Date Navigation */}
+                        <div className="flex items-center gap-2 bg-muted/50 p-1 rounded-lg w-full md:w-auto justify-center">
+                            <Button variant="ghost" size="icon" onClick={handlePrevMonth} className="h-8 w-8">
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <div className="flex items-center gap-2 px-2 font-medium whitespace-nowrap min-w-[140px] justify-center">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <span>{currentMonth} {currentYear}</span>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={handleNextMonth} className="h-8 w-8">
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        {/* 2. Search Bar - Centered/Expansive */}
+                        <div className="relative w-full xl:max-w-md">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search student by name, email, phone..."
+                                className="pl-10 w-full bg-muted/20 border-muted-foreground/20 focus:bg-background transition-colors"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        {/* 3. Actions Group */}
+                        <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+                            {/* Dropdowns */}
+                            <div className="flex items-center gap-2">
+                                <Select value={currentMonth} onValueChange={handleMonthSelect}>
+                                    <SelectTrigger className="w-[110px] bg-background">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map(m => (
+                                            <SelectItem key={m} value={m}>{m}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select value={currentYear.toString()} onValueChange={handleYearSelect}>
+                                    <SelectTrigger className="w-[90px] bg-background">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {[2024, 2025, 2026, 2027].map(y => (
+                                            <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            {/* Regenerate Button */}
+                            <Button
+                                className="bg-black hover:bg-black/90 text-white rounded-lg shadow-md whitespace-nowrap ml-2"
+                                onClick={() => setShowGenerateConfirm(true)}
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Generate
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
+
+                {/* Stats Row */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <Card className="rounded-xl border shadow-sm">
+                        <CardContent className="p-6">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Total Bills</p>
+                            <p className="text-3xl font-bold">{stats.totalBills}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="rounded-xl border shadow-sm">
+                        <CardContent className="p-6">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Total Amount</p>
+                            <p className="text-3xl font-bold">₹{stats.totalAmount.toLocaleString()}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="rounded-xl border border-green-100 bg-green-50 shadow-sm">
+                        <CardContent className="p-6">
+                            <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">Paid ({stats.paidCount})</p>
+                            <p className="text-3xl font-bold text-green-700">₹{stats.paidAmount.toLocaleString()}</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="rounded-xl border border-yellow-100 bg-yellow-50 shadow-sm">
+                        <CardContent className="p-6">
+                            <p className="text-xs font-semibold text-yellow-600 uppercase tracking-wider mb-1">Pending ({stats.pendingCount})</p>
+                            <p className="text-3xl font-bold text-yellow-700">₹{stats.pendingAmount.toLocaleString()}</p>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Subscriptions List */}
+                <div className="space-y-4">
+                    {loading ? (
+                        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+                    ) : filteredSubs.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
+                            {searchTerm ? (
+                                <span>No bills found matching "{searchTerm}" in {currentMonth} {currentYear}</span>
+                            ) : (
+                                <span>No bills found for {currentMonth} {currentYear}</span>
+                            )}
+                        </div>
+                    ) : (
+                        filteredSubs.map((sub) => {
+                            const student = typeof sub.studentId === 'object' ? sub.studentId : { name: 'Unknown', phone: '', _id: '' };
+                            return (
+                                <Card key={sub._id} className="rounded-xl border shadow-sm hover:shadow-md transition-shadow">
+                                    <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+
+                                        {/* Left: Student Info */}
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-lg text-foreground">{student.name}</h3>
+                                            <div className="flex flex-col text-sm text-muted-foreground">
+                                                <span>{student.phone || 'No phone'}</span>
+                                                {/* Optional: Show matched criteria if searching */}
+                                                {(student.email && searchTerm && student.email.toLowerCase().includes(searchTerm.toLowerCase())) && (
+                                                    <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 px-1 rounded w-fit mt-1">{student.email}</span>
+                                                )}
+                                                {(student.address && searchTerm && student.address.toLowerCase().includes(searchTerm.toLowerCase())) && (
+                                                    <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 px-1 rounded w-fit mt-1">{student.address}</span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Right: Actions & Status */}
+                                        <div className="flex items-center gap-6">
+                                            <div className="text-right">
+                                                <p className="text-xl font-bold text-foreground">₹{sub.totalAmount}</p>
+                                                <p className={`text-xs font-bold uppercase tracking-wider ${sub.status === 'paid' ? 'text-green-600' :
+                                                    sub.status === 'overdue' ? 'text-red-600' : 'text-orange-500'
+                                                    }`}>
+                                                    {sub.status}
+                                                </p>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                {sub.status !== 'paid' && (
+                                                    <Button
+                                                        variant="outline"
+                                                        onClick={() => handleMarkPaid(sub._id)}
+                                                        className="font-medium"
+                                                    >
+                                                        Mark Paid
+                                                    </Button>
+                                                )}
+
+                                                <Button variant="outline" size="icon" title="No PDF logic yet">
+                                                    <FileText className="h-4 w-4" />
+                                                </Button>
+
+                                                <Button
+                                                    className="bg-green-500 hover:bg-green-600 text-white border-green-600"
+                                                    onClick={() => handleWhatsApp(sub)}
+                                                >
+                                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                                    WhatsApp
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })
+                    )}
+                </div>
             </div>
+
+            {/* Confirm Generation Modal */}
+            <Dialog open={showGenerateConfirm} onOpenChange={setShowGenerateConfirm}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Regenerate Bills?</DialogTitle>
+                        <DialogDescription>
+                            This will generate bills for all active students for <strong>{currentMonth} {currentYear}</strong>.
+                            <br />
+                            Existing bills for this month will be skipped. Are you sure you want to proceed?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowGenerateConfirm(false)}>Cancel</Button>
+                        <Button onClick={handleGenerateAll} disabled={generating}>
+                            {generating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                            Confirm Generate
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </DashboardLayout>
     );
 };

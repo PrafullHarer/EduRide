@@ -14,10 +14,20 @@ router.get('/', auth, async (req, res) => {
     }
 });
 
-// Get student by ID
-router.get('/:id', auth, async (req, res) => {
+// Get students by route ID (MUST be before /:id to avoid conflict)
+router.get('/route/:routeId', auth, async (req, res) => {
     try {
-        const student = await Student.findById(req.params.id).populate('busId routeId');
+        const students = await Student.find({ routeId: req.params.routeId }).populate('busId routeId');
+        res.json(students);
+    } catch (error) {
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Get student by user ID (MUST be before /:id to avoid conflict)
+router.get('/user/:userId', auth, async (req, res) => {
+    try {
+        const student = await Student.findOne({ userId: req.params.userId }).populate('busId routeId');
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
         }
@@ -27,10 +37,10 @@ router.get('/:id', auth, async (req, res) => {
     }
 });
 
-// Get student by user ID
-router.get('/user/:userId', auth, async (req, res) => {
+// Get student by ID (generic route - must be LAST among GET routes)
+router.get('/:id', auth, async (req, res) => {
     try {
-        const student = await Student.findOne({ userId: req.params.userId }).populate('busId routeId');
+        const student = await Student.findById(req.params.id).populate('busId routeId');
         if (!student) {
             return res.status(404).json({ message: 'Student not found' });
         }

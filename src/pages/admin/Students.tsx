@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { GraduationCap, Search, Plus, Mail, Phone, Loader2, User, Bus, Calendar, Pencil, Trash2, Eye } from 'lucide-react';
-import { studentsAPI, authAPI } from '@/lib/api';
+import { GraduationCap, Search, Plus, Mail, Phone, Loader2, User, Bus, Calendar, Pencil, Trash2, Eye, Receipt, ClipboardList, ChevronLeft, ChevronRight, Sun, Moon, Check, X } from 'lucide-react';
+import { studentsAPI, authAPI, subscriptionsAPI, attendanceAPI } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface Student {
@@ -37,8 +37,12 @@ const Students: React.FC = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showViewModal, setShowViewModal] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [showAttendanceModal, setShowAttendanceModal] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
     const [saving, setSaving] = useState(false);
+    const [attendanceMonth, setAttendanceMonth] = useState(new Date());
+    const [monthAttendance, setMonthAttendance] = useState<Array<{ date: Date; morning: boolean; evening: boolean; isHoliday: boolean }>>([]);
+    const [loadingAttendance, setLoadingAttendance] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -176,9 +180,91 @@ const Students: React.FC = () => {
         setShowDeleteDialog(true);
     };
 
+    const handleGenerateBill = async (student: Student) => {
+        const currentDate = new Date();
+        const month = currentDate.toLocaleString('default', { month: 'long' });
+        const year = currentDate.getFullYear();
+
+        if (!confirm(`Generate bill for ${student.name} for ${month} ${year}?`)) return;
+
+        try {
+            await subscriptionsAPI.generate({
+                studentId: student._id,
+                month,
+                year
+            });
+            toast({ title: 'Success', description: `Bill generated for ${student.name}` });
+        } catch (error: any) {
+            toast({ title: 'Error', description: error.message || 'Failed to generate bill', variant: 'destructive' });
+        }
+    };
+
     const openViewModal = (student: Student) => {
         setSelectedStudent(student);
         setShowViewModal(true);
+    };
+
+    const openAttendanceModal = (student: Student) => {
+        setSelectedStudent(student);
+        setAttendanceMonth(new Date());
+        setShowAttendanceModal(true);
+        // Load attendance data
+        fetchMonthAttendance(student._id, new Date());
+    };
+
+    const fetchMonthAttendance = async (studentId: string, month: Date) => {
+        setLoadingAttendance(true);
+        try {
+            const year = month.getFullYear();
+            const monthNum = month.getMonth() + 1;
+            const data = await attendanceAPI.getByStudentMonth(studentId, year, monthNum);
+            setMonthAttendance(data.map((a: any) => ({
+                date: new Date(a.date),
+                morning: a.morning,
+                evening: a.evening,
+                isHoliday: a.isHoliday
+            })));
+        } catch (error) {
+            console.error('Error fetching attendance:', error);
+            setMonthAttendance([]);
+        } finally {
+            setLoadingAttendance(false);
+        }
+    };
+
+    const getMonthDays = () => {
+        const year = attendanceMonth.getFullYear();
+        const month = attendanceMonth.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const days = [];
+        for (let i = 1; i <= daysInMonth; i++) {
+            const date = new Date(year, month, i);
+            // Find attendance record for this day
+            const record = monthAttendance.find(a =>
+                a.date.getDate() === i &&
+                a.date.getMonth() === month &&
+                a.date.getFullYear() === year
+            );
+            days.push({
+                day: i,
+                dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                isWeekend: date.getDay() === 0 || date.getDay() === 6,
+                morning: record?.morning || false,
+                evening: record?.evening || false,
+                isHoliday: record?.isHoliday || date.getDay() === 0,
+                hasRecord: !!record
+            });
+        }
+        return days;
+    };
+
+    const changeAttendanceMonth = (delta: number) => {
+        const newDate = new Date(attendanceMonth);
+        newDate.setMonth(newDate.getMonth() + delta);
+        setAttendanceMonth(newDate);
+        if (selectedStudent) {
+            fetchMonthAttendance(selectedStudent._id, newDate);
+        }
     };
 
     const filteredStudents = students.filter(s => {
@@ -288,6 +374,12 @@ const Students: React.FC = () => {
                                         </Button>
                                         <Button variant="outline" size="icon" onClick={() => openEditModal(student)} title="Edit">
                                             <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="outline" size="icon" onClick={() => openAttendanceModal(student)} title="Attendance" className="text-green-600 hover:text-green-700">
+                                            <ClipboardList className="h-4 w-4" />
+                                        </Button>
+                                        <Button variant="outline" size="icon" onClick={() => handleGenerateBill(student)} title="Generate Bill" className="text-blue-600 hover:text-blue-700">
+                                            <Receipt className="h-4 w-4" />
                                         </Button>
                                         <Button variant="outline" size="icon" onClick={() => openDeleteDialog(student)} className="text-destructive hover:text-destructive" title="Delete">
                                             <Trash2 className="h-4 w-4" />
@@ -479,6 +571,61 @@ const Students: React.FC = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* Attendance History Modal */}
+            <Dialog open={showAttendanceModal} onOpenChange={setShowAttendanceModal}>
+                <DialogContent className="max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <ClipboardList className="h-5 w-5" />
+                            {selectedStudent?.name}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Attendance History - {attendanceMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center justify-between py-2">
+                        <Button variant="outline" size="sm" onClick={() => changeAttendanceMonth(-1)}>
+                            <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+                        </Button>
+                        <span className="font-medium">
+                            {attendanceMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                        </span>
+                        <Button variant="outline" size="sm" onClick={() => changeAttendanceMonth(1)}>
+                            Next <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </div>
+                    <div className="overflow-y-auto flex-1 -mx-6 px-6">
+                        <div className="space-y-2">
+                            {getMonthDays().map((day) => (
+                                <div key={day.day} className={`flex items-center justify-between py-2 px-3 rounded-lg border ${day.isHoliday ? 'bg-orange-50 dark:bg-orange-900/10 border-orange-200' : 'hover:bg-muted/50'}`}>
+                                    <div className="flex items-center gap-3">
+                                        <span className="font-bold text-lg w-12">{attendanceMonth.toLocaleDateString('en-US', { month: 'short' })} {day.day}</span>
+                                        <span className={`text-sm ${day.isWeekend ? 'text-orange-600' : 'text-muted-foreground'}`}>{day.dayName}</span>
+                                    </div>
+                                    {day.isHoliday ? (
+                                        <span className="text-sm text-orange-600">Holiday</span>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${day.morning ? 'bg-orange-100 text-orange-700' : 'bg-muted text-muted-foreground'}`}>
+                                                <Sun className="h-3 w-3" />
+                                                {day.morning ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                                            </span>
+                                            <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${day.evening ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}`}>
+                                                <Moon className="h-3 w-3" />
+                                                {day.evening ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <DialogFooter className="mt-4">
+                        <Button variant="outline" onClick={() => setShowAttendanceModal(false)}>Close</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </DashboardLayout>
     );
 };
