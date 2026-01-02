@@ -6,10 +6,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 import { toast } from "sonner";
 
+import { messagesAPI } from "@/lib/api";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+
 const ContactUs = () => {
-    const handleSubmit = (e: React.FormEvent) => {
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        toast.success("Message sent! We'll get back to you soon.");
+        setLoading(true);
+
+        const formData = new FormData(e.target as HTMLFormElement);
+        const data = {
+            name: formData.get('name'),
+            email: formData.get('email'),
+            subject: formData.get('subject'),
+            message: formData.get('message'),
+        };
+
+        try {
+            await messagesAPI.create(data);
+            toast.success("Message sent! We'll get back to you soon.");
+            (e.target as HTMLFormElement).reset();
+        } catch (error) {
+            toast.error("Failed to send message. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -56,23 +80,24 @@ const ContactUs = () => {
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
                                         <Label htmlFor="name">Full Name</Label>
-                                        <Input id="name" placeholder="John Doe" className="h-12 bg-background/50" required />
+                                        <Input id="name" name="name" placeholder="John Doe" className="h-12 bg-background/50" required />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="email">Email Address</Label>
-                                        <Input id="email" type="email" placeholder="john@example.com" className="h-12 bg-background/50" required />
+                                        <Input id="email" name="email" type="email" placeholder="john@example.com" className="h-12 bg-background/50" required />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="subject">Subject</Label>
-                                    <Input id="subject" placeholder="How can we help?" className="h-12 bg-background/50" required />
+                                    <Input id="subject" name="subject" placeholder="How can we help?" className="h-12 bg-background/50" required />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="message">Message</Label>
-                                    <Textarea id="message" placeholder="Tell us more about your inquiry..." className="min-h-[150px] bg-background/50 resize-none" required />
+                                    <Textarea id="message" name="message" placeholder="Tell us more about your inquiry..." className="min-h-[150px] bg-background/50 resize-none" required />
                                 </div>
-                                <Button size="lg" className="w-full h-12 gradient-primary text-lg font-semibold shadow-glow">
-                                    Send Message <Send className="w-4 h-4 ml-2" />
+                                <Button size="lg" className="w-full h-12 gradient-primary text-lg font-semibold shadow-glow" disabled={loading}>
+                                    {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                                    {loading ? "Sending..." : "Send Message"} {!loading && <Send className="w-4 h-4 ml-2" />}
                                 </Button>
                             </form>
                         </div>

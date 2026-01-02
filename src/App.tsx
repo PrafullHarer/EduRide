@@ -49,6 +49,7 @@ const AdminSubscriptions = lazy(() => import("./pages/admin/Subscriptions"));
 const AdminPayments = lazy(() => import("./pages/admin/Payments"));
 const Pricing = lazy(() => import("./pages/admin/Pricing"));
 const Settings = lazy(() => import("./pages/admin/Settings"));
+const Messages = lazy(() => import("./pages/admin/Messages"));
 
 // Student Pages
 const StudentDashboard = lazy(() => import("./pages/student/StudentDashboard"));
@@ -104,6 +105,7 @@ const AppRoutes = () => {
         <Route path="/admin/drivers" element={<ProtectedRoute allowedRoles={['admin']}><Drivers /></ProtectedRoute>} />
         <Route path="/admin/subscriptions" element={<ProtectedRoute allowedRoles={['admin']}><AdminSubscriptions /></ProtectedRoute>} />
         <Route path="/admin/payments" element={<ProtectedRoute allowedRoles={['admin']}><AdminPayments /></ProtectedRoute>} />
+        <Route path="/admin/messages" element={<ProtectedRoute allowedRoles={['admin']}><Messages /></ProtectedRoute>} />
         <Route path="/admin/pricing" element={<ProtectedRoute allowedRoles={['admin']}><Pricing /></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute allowedRoles={['admin']}><Settings /></ProtectedRoute>} />
 

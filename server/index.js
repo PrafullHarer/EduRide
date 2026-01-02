@@ -16,6 +16,8 @@ const paymentRoutes = require('./routes/payments');
 const analyticsRoutes = require('./routes/analytics');
 const scheduleRoutes = require('./routes/schedules');
 const trackingRoutes = require('./routes/tracking');
+const dashboardRoutes = require('./routes/dashboard');
+const messageRoutes = require('./routes/messages');
 
 const app = express();
 const server = http.createServer(app);
@@ -70,6 +72,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/tracking', trackingRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

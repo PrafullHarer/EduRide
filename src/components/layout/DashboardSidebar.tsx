@@ -22,6 +22,7 @@ import {
   Truck,
   Navigation,
   Radar,
+  MessageSquare,
 } from 'lucide-react';
 
 interface SidebarLink {
@@ -48,6 +49,7 @@ const adminLinks: SidebarLink[] = [
   { label: 'Drivers', href: '/admin/drivers', icon: <UserCog className="h-5 w-5" /> },
   { label: 'Subscriptions', href: '/admin/subscriptions', icon: <CreditCard className="h-5 w-5" /> },
   { label: 'Payments', href: '/admin/payments', icon: <IndianRupee className="h-5 w-5" /> },
+  { label: 'Messages', href: '/admin/messages', icon: <MessageSquare className="h-5 w-5" /> },
   { label: 'Pricing', href: '/admin/pricing', icon: <FileText className="h-5 w-5" /> },
 ];
 

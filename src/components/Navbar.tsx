@@ -20,7 +20,6 @@ const Navbar = () => {
     return (
         <div className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
             <nav className="bg-black/90 backdrop-blur-md border border-white/10 text-white rounded-full shadow-2xl px-6 py-3 flex items-center justify-between gap-8 max-w-5xl w-full">
-                {/* Logo */}
                 <Link to="/" className="flex items-center gap-2 group">
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                         <Bus className="w-4 h-4 text-black" />

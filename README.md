@@ -1,106 +1,95 @@
-# Welcome to your Lovable project
+# EduRide - Safe & Smart Student Transport
 
-## Project info
+**EduRide** (formerly School Bus Buddy) is a comprehensive transport management system designed to bridge the gap between schools, parents, and bus drivers. It ensures student safety through real-time tracking, automated alerts, and efficient route management.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+<div align="center">
+  <img src="/public/favicon.svg" alt="EduRide Logo" width="100" />
+</div>
 
-## How can I edit this code?
+## 🚀 Features
 
-There are several ways of editing your application.
+### 🎓 For Students & Parents
+- **Live Bus Tracking:** Real-time visual tracking of the assigned bus.
+- **Trip History:** View past trips and attendance.
+- **Subscription Management:** Easy renewal and payment history.
+- **Notifications:** Adjust alert preferences for delays and arrivals.
 
-**Use Lovable**
+### 🚌 For Drivers
+- **Route Navigation:** View assigned route stops and students.
+- **Attendance:** Digital checklist for boarding/deboarding students.
+- **Duty Schedule:** View upcoming shifts and assigned buses.
+- **Trip Logs:** Automatic logging of trip start/end times.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 🛡️ For Admins
+- **Dashboard:** High-level overview of fleet status, active trips, and revenue.
+- **Fleet Management:** Add/Edit buses, routes, and assign drivers.
+- **User Management:** Manage student subscriptions and driver profiles.
+- **Message Center:** View and respond to inquiries from the "Contact Us" page.
+- **Financials:** Track payments, subscription statuses, and generate pricing plans.
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🛠️ Tech Stack
 
-**Use your preferred IDE**
+- **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui, Lucide Icons.
+- **Backend:** Node.js, Express.js, MongoDB (Mongoose), Socket.IO.
+- **State Management:** React Query (TanStack Query), Context API.
+- **Deployment:** Vercel (Frontend & Serverless Functions compatible).
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🏁 Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
+- Node.js (v18+)
+- MongoDB (A local or Atlas connection string)
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/yourusername/eduride.git
+    cd eduride
+    ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2.  **Install Root & Frontend Dependencies:**
+    ```bash
+    npm install
+    ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3.  **Install Backend Dependencies:**
+    ```bash
+    cd server
+    npm install
+    cd ..
+    ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+4.  **Environment Setup:**
+    - Create a `.env` file in `server/` with:
+      ```env
+      MONGO_URI=your_mongodb_connection_string
+      JWT_SECRET=your_jwt_secret
+      PORT=5000
+      ```
 
-**Edit a file directly in GitHub**
+5.  **Run the Project:**
+    You need to run both the frontend and backend servers.
+    
+    **Terminal 1 (Backend):**
+    ```bash
+    cd server
+    npm run dev
+    ```
+    
+    **Terminal 2 (Frontend):**
+    ```bash
+    # From root directory
+    npm run dev
+    ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+6.  **Access the App:**
+    Open [http://localhost:8080](http://localhost:8080) to view it in your browser.
 
-**Use GitHub Codespaces**
+## 📚 Documentation
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+For detailed architecture, API endpoints, and folder structure, please refer to the [User & Developer Guide](./docs/DOCUMENTATION.md).
 
-## What technologies are used for this project?
+## 📄 License
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-### Deploy with Lovable
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-### Deploy with Vercel
-
-This project is configured for deployment on Vercel.
-
-**Prerequisites:**
-- A Vercel account (sign up at [vercel.com](https://vercel.com))
-- MongoDB database (MongoDB Atlas recommended)
-
-**Environment Variables:**
-Set these in your Vercel project settings:
-- `MONGODB_URI` - Your MongoDB connection string (required)
-- `FRONTEND_URL` - Frontend URL for CORS (optional, defaults to `*`)
-- `JWT_SECRET` - Secret key for JWT tokens (optional)
-
-**Deployment Steps:**
-1. Push your code to a Git repository (GitHub, GitLab, or Bitbucket)
-2. Go to [vercel.com/new](https://vercel.com/new) and import your repository
-3. Add environment variables in project settings
-4. Deploy
-
-**Important Notes:**
-- ⚠️ Real-time features (Socket.IO) are not supported on Vercel serverless functions. The app will work, but real-time bus tracking updates will be limited.
-- The database connection is optimized for serverless environments with connection pooling.
-
-**Testing Locally:**
-```bash
-npm install
-npm run build
-vercel dev  # Requires Vercel CLI: npm i -g vercel
-```
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This project is licensed under the MIT License.

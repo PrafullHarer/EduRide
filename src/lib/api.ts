@@ -138,6 +138,17 @@ export const dashboardAPI = {
     getStudentDashboard: () => authFetch('/dashboard/student'),
 };
 
+export const messagesAPI = {
+    create: (data: any) => fetch(`${API_BASE_URL}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    }).then(res => res.json()),
+    getAll: () => authFetch('/messages'),
+    markRead: (id: string) => authFetch(`/messages/${id}/read`, { method: 'PATCH' }),
+    delete: (id: string) => authFetch(`/messages/${id}`, { method: 'DELETE' }),
+};
+
 // Preload all API endpoints to warm up serverless functions
 // Call this after successful login to eliminate cold starts on navigation
 export const preloadAPIs = async (role: string) => {
