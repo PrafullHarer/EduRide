@@ -1,5 +1,12 @@
 // Vercel serverless function wrapper for Express app
 require('dotenv').config();
+
+// Set default JWT_SECRET if not provided
+if (!process.env.JWT_SECRET) {
+    process.env.JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+    console.warn('Warning: JWT_SECRET not set, using default. Set JWT_SECRET in Vercel environment variables.');
+}
+
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('../server/config/db');
@@ -25,7 +32,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Routes
+// Routes - Vercel rewrite preserves the /api prefix
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/buses', busRoutes);
@@ -42,17 +49,44 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'School Bus Buddy API is running' });
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Express error:', err);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal server error',
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    });
+});
+
+// Initialize DB connection once
+let dbInitPromise = null;
+const initDB = async () => {
+    if (!dbInitPromise) {
+        dbInitPromise = connectDB().catch(err => {
+            console.error('DB connection error:', err);
+            dbInitPromise = null; // Reset on error to allow retry
+            throw err;
+        });
+    }
+    return dbInitPromise;
+};
+
 // Vercel serverless function handler
 module.exports = async (req, res) => {
     try {
         // Connect to DB (connection is cached for serverless)
-        await connectDB();
+        await initDB();
         
         // Handle the request with Express
-        return app(req, res);
+        app(req, res);
     } catch (error) {
         console.error('Server error:', error);
-        return res.status(500).json({ message: 'Internal server error' });
+        if (!res.headersSent) {
+            res.status(500).json({ 
+                message: 'Internal server error',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
     }
 };
 
