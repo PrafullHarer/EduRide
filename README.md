@@ -16,9 +16,10 @@
 
 ### 🚌 For Drivers
 - **Route Navigation:** View assigned route stops and students.
-- **Attendance:** Digital checklist for boarding/deboarding students.
+- **Attendance:** Digital checklist for boarding/deboarding students with morning/evening shifts.
 - **Duty Schedule:** View upcoming shifts and assigned buses.
-- **Trip Logs:** Automatic logging of trip start/end times.
+- **Trip Logs:** Automatic logging of completed trips with timestamps and student counts.
+- **Dashboard:** "Today's Status" overview with quick actions for marking trips complete.
 
 ### 🛡️ For Admins
 - **Dashboard:** High-level overview of fleet status, active trips, and revenue.

@@ -69,6 +69,8 @@ All API calls are prefixed with `/api`.
 -   `GET/POST /drivers` - Manage drivers.
 -   `GET/POST /buses` - Manage buses.
 -   `GET/POST /routes` - Manage routes.
+-   `GET/POST /attendance` - Mark and view student attendance (bulk & date-wise).
+-   `GET/POST /trip-logs` - Log and view trip history for drivers.
 -   `POST /messages` - (Public) Send contact message.
 -   `GET /messages` - (Admin) View messages.
 

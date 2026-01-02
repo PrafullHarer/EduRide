@@ -244,7 +244,7 @@ const ManageRoute: React.FC = () => {
         return (
             <DashboardLayout title="Manage Route" subtitle="Share location & manage stops">
                 <div className="flex items-center justify-center h-96">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <div className="loader" />
                 </div>
             </DashboardLayout>
         );

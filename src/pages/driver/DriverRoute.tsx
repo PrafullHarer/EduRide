@@ -37,7 +37,7 @@ const DriverRoute: React.FC = () => {
         return (
             <DashboardLayout title="My Route" subtitle="View your assigned route">
                 <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <div className="loader" />
                 </div>
             </DashboardLayout>
         );
@@ -104,8 +104,8 @@ const DriverRoute: React.FC = () => {
                             {route.stops?.map((stop: any, i: number) => (
                                 <div key={i} className="flex items-center gap-4 p-3 border rounded-lg">
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-success text-white' :
-                                            i === route.stops.length - 1 ? 'bg-destructive text-white' :
-                                                'bg-primary text-primary-foreground'
+                                        i === route.stops.length - 1 ? 'bg-destructive text-white' :
+                                            'bg-primary text-primary-foreground'
                                         }`}>
                                         {stop.order}
                                     </div>

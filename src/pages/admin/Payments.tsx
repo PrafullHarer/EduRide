@@ -44,7 +44,7 @@ const Payments: React.FC = () => {
         return (
             <DashboardLayout title="Payments" subtitle="View payment history">
                 <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <div className="loader" />
                 </div>
             </DashboardLayout>
         );
@@ -92,7 +92,7 @@ const Payments: React.FC = () => {
                                 <div key={payment._id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
                                     <div className="flex items-center gap-4">
                                         <div className={`h-10 w-10 rounded-full flex items-center justify-center ${payment.status === 'success' ? 'bg-success/10' :
-                                                payment.status === 'failed' ? 'bg-destructive/10' : 'bg-warning/10'
+                                            payment.status === 'failed' ? 'bg-destructive/10' : 'bg-warning/10'
                                             }`}>
                                             {payment.status === 'success' ? <CheckCircle className="h-5 w-5 text-success" /> :
                                                 payment.status === 'failed' ? <XCircle className="h-5 w-5 text-destructive" /> :

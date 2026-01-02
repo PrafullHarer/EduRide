@@ -156,3 +156,43 @@
     @apply bg-card/80 backdrop-blur-md border border-border/50;
   }
 }
+
+/* Custom Loader Animation */
+.loader {
+  --r1: 154%;
+  --r2: 68.5%;
+  width: 60px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(var(--r1) var(--r2) at top, #0000 79.5%, hsl(var(--accent)) 80%),
+    radial-gradient(var(--r1) var(--r2) at bottom, hsl(var(--accent)) 79.5%, #0000 80%),
+    radial-gradient(var(--r1) var(--r2) at top, #0000 79.5%, hsl(var(--accent)) 80%),
+    hsl(var(--muted));
+  background-size: 50.5% 220%;
+  background-position: -100% 0%, 0% 0%, 100% 0%;
+  background-repeat: no-repeat;
+  animation: loader-animation 2s infinite linear;
+}
+
+.loader.loader-sm {
+  width: 32px;
+}
+
+.loader.loader-lg {
+  width: 80px;
+}
+
+@keyframes loader-animation {
+  33% {
+    background-position: 0% 33%, 100% 33%, 200% 33%;
+  }
+
+  66% {
+    background-position: -100% 66%, 0% 66%, 100% 66%;
+  }
+
+  100% {
+    background-position: 0% 100%, 100% 100%, 200% 100%;
+  }
+}

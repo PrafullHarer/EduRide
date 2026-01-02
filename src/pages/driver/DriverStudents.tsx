@@ -195,7 +195,7 @@ const DriverStudents: React.FC = () => {
         return (
             <DashboardLayout title="Attendance" subtitle="Mark student attendance">
                 <div className="flex items-center justify-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <div className="loader" />
                 </div>
             </DashboardLayout>
         );

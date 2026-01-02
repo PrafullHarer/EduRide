@@ -260,7 +260,7 @@ const Subscriptions: React.FC = () => {
                 {/* Subscriptions List */}
                 <div className="space-y-4">
                     {loading ? (
-                        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+                        <div className="flex justify-center py-12"><div className="loader" /></div>
                     ) : filteredSubs.length === 0 ? (
                         <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
                             {searchTerm ? (

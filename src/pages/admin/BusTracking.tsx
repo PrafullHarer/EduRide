@@ -102,7 +102,7 @@ const BusTracking: React.FC = () => {
         return (
             <DashboardLayout title="Bus Tracking" subtitle="Real-time GPS tracking">
                 <div className="flex items-center justify-center h-96">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <div className="loader" />
                 </div>
             </DashboardLayout>
         );
