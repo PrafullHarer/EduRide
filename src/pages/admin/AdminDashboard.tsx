@@ -72,7 +72,7 @@ const AdminDashboard: React.FC = () => {
                   {subscriptions.map(sub => (
                     <div key={sub._id} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
                       <div>
-                        <p className="font-medium">{typeof sub.studentId === 'object' ? sub.studentId.name : 'Student'}</p>
+                        <p className="font-medium">{typeof sub.studentId === 'object' && sub.studentId !== null ? sub.studentId.name : 'Unknown Student'}</p>
                         <p className="text-sm text-muted-foreground">{sub.month} {sub.year}</p>
                       </div>
                       <div className="text-right">
